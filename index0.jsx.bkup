@@ -1,0 +1,93 @@
+import React from 'react';
+import ReactDOM from 'react-dom'
+import Dropzone from 'react-dropzone';
+import 'aws-sdk/dist/aws-sdk';
+const AWS = window.AWS;
+
+// const upload = require('superagent')
+
+function s3Client() {
+  AWS.config.region = "ap-northeast-1";
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId: "ap-northeast-1:540ba4eb-2f1a-4dda-b1d5-5562beb2588d"});
+  AWS.config.credentials.get();
+  console.log("Cognito Identify Id: "+AWS.config.credentials.identityId)
+  return new AWS.S3({params: {Bucket: "step-functions-trial"}});
+};
+
+class FileUpload extends React.Component{
+  constructor() {
+    super();
+    const s3 = s3Client();
+    console.log(s3.putObject());
+    this.state = {
+      onDrop: (files) => {
+        /*
+        superagent.post('/upload')
+        .attach('theseNamesMustMatch', files[0])
+        .end((err, res) => {
+        if (err) console.log(err);
+        alert('File uploaded!');
+        })
+        */
+        console.log(files)
+        console.log(this.s3)
+        putObjectPromise = this.s3.putObject({
+          Key: files[0].name,
+          ContentType: files[0].type,
+          Body: files[0],
+          ACL: "public-read"
+        }).promise()
+      }
+    }
+  }
+
+  render(){
+    return (
+      <div>
+        <Dropzone onDrop={this.state.onDrop} multiple={false}>
+          <div>Try dropping a file here, or click to select a file to upload.</div>
+        </Dropzone>
+      </div>
+    );
+  }
+};
+
+
+
+/*
+function s3Client_promise() {
+  AWS.config.region = "ap-northeast-1";
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId: "ap-northeast-1:540ba4eb-2f1a-4dda-b1d5-5562beb2588d"});
+  const credentialPromise = AWS.config.credentials.getPromise();
+  credentialPromise.then(() => {
+    console.log("Success: Cognito Identify Id: "+AWS.config.credentials.identityId)
+  }).catch((err) => {
+    console.log("Error");
+  })
+  return new AWS.S3({params: {Bucket: "step-functions-trial"}});
+};
+*/
+
+/*
+$("#apply-upload").click(function() {
+  var file = $("#upload-file").prop("files")[0];
+  var timestamp = new Date().getTime();
+  var filename = "file" + timestamp + ".jpg";
+  s3_client().putObject({Key: filename, ContentType: file.type, Body: file, ACL: "public-read"},
+  function(err, data){
+    // if failed, alert
+    if(data !== null){
+      alert("アップロード成功!");
+    } else {
+      alert("アップロード失敗.");
+    }
+  });
+});
+*/
+
+ReactDOM.render(
+  <FileUpload />,
+  document.getElementById('container')
+);
+
+// export default FileUpload;
